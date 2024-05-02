@@ -6,7 +6,7 @@ public class InputHandler : MonoBehaviour
 {
     private Camera mainCamera;
     private bool isDragging = false;
-    private Vector3 offset;
+    private Vector3 dragDir;
     public GameObject touchArea;
     public GameObject colliderTouched;
 
@@ -26,7 +26,7 @@ public class InputHandler : MonoBehaviour
         CheckTouch();
     }
 
-   
+
 
     public int multiple;
     public void CheckTouch()
@@ -50,7 +50,7 @@ public class InputHandler : MonoBehaviour
                 Debug.LogError("TOUCH + " + hit.collider);
                 isDragging = true;
                 DrawLine.instance.EnableDraw();
-                offset = grabingObj.transform.position - new Vector3(mousePos.x, mousePos.y, 0);
+                dragDir = grabingObj.transform.position - new Vector3(mousePos.x, mousePos.y, 0);
             }
 
 
@@ -60,16 +60,17 @@ public class InputHandler : MonoBehaviour
         {
             Vector2 mousePos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
 
-            offset = new Vector3(mousePos.x, mousePos.y, 0) - grabingObj.transform.position;
-            // Update the GameObject's position using the offset, properly handling the z-component
-            //gameObject.transform.position = new Vector3(mousePos.x, mousePos.y, gameObject.transform.position.z) + offset;
+            dragDir = new Vector3(mousePos.x, mousePos.y, 0) - grabingObj.transform.position;
+            grablingRd.AddForce(dragDir * multiple);
 
-            DrawLine.instance.lineRenderer.SetPosition(0, colliderTouched.transform.position);
+            DrawLine.instance.DrawLineAt(colliderTouched.transform.position,mousePos);
 
-            Debug.LogError("offset add: " + offset);
-            grablingRd.AddForce(offset * multiple);
 
-            // Optionally, draw the drag ray
+
+
+
+
+
             Debug.DrawRay(new Vector3(mousePos.x, mousePos.y, 0), Vector3.forward * 10, Color.green, 0.1f);
         }
 
@@ -84,7 +85,9 @@ public class InputHandler : MonoBehaviour
         }
     }
 
+
     public TouchablePoint grabingObj;
+    public float distanceGrabObject;
     public TouchablePoint FindNearTouchablePoint(Vector2 touchPos)
     {
 
@@ -100,7 +103,11 @@ public class InputHandler : MonoBehaviour
                 nearestPoint = point;
             }
         }
-        return nearestPoint;
+        float distanceToNearestPoint = Vector3.Distance(touchPos, nearestPoint.gameObject.transform.position);
+       
+        
+        if (distanceGrabObject > distanceToNearestPoint) return nearestPoint;
+        return null;
 
     }
 
